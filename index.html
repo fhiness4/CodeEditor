@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Code Editor</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Finesse IDE &lt;/&gt;</h1>
+    </header>
+    
+    <div class="container">
+        <div class="editor-panel">
+            <div class="tabs">
+                <div class="tab active" data-tab="html">HTML</div>
+                <div class="tab" data-tab="css">CSS</div>
+                <div class="tab" data-tab="js">JavaScript</div>
+            </div>
+            <div class="editor-label">
+                HTML <span>.html</span>
+            </div>
+            <div class="editor-container">
+                <textarea id="html-editor" class="code-editor" placeholder="Write your HTML here...">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;title&gt;Hello World, from finesse&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;Hello, Welcome to Finesse code studio&lt;/h1&gt;
+    &lt;p&gt;Start editing to see some magic happen!&lt;/p&gt;
+&lt;/body&gt;
+&lt;/html&gt;</textarea>
+            </div>
+            <div class="editor-label" style="display: none;">
+                CSS <span>.css</span>
+            </div>
+            <div class="editor-container" style="display: none;">
+                <textarea id="css-editor" class="code-editor" placeholder="Write your CSS here...">body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    padding: 50px;
+    background-color: #f0f0f0;
+}
+
+h1 {
+    color: #2c3e50;
+}
+
+p {
+    color: #7f8c8d;
+    font-size: 18px;
+}</textarea>
+            </div>
+            <div class="editor-label" style="display: none;">
+                JavaScript <span>.js</span>
+            </div>
+            <div class="editor-container" style="display: none;">
+                <textarea id="js-editor" class="code-editor" placeholder="Write your JavaScript here...">document.addEventListener('DOMContentLoaded', function() {
+    // Change background color every 2 seconds
+    setInterval(function() {
+        const colors = ['#f0f0f0', '#e6f7ff', '#fff0e6'];
+        const randomColor = colors[Math.floor(Math.random() * colors.length)];
+        document.body.style.backgroundColor = randomColor;
+    }, 2000);
+    
+    // Add click event to the paragraph
+    document.querySelector('p').addEventListener('click', function() {
+        this.textContent = "You clicked me! " + new Date().toLocaleTimeString();
+    });
+});</textarea>
+            </div>
+        </div>
+        
+        <div class="resizer" id="resizer"></div>
+        
+        <div class="preview-panel">
+            <div class="editor-label">
+                Preview
+            </div>
+            <div class="preview-container">
+                <iframe id="preview"></iframe>
+            </div>
+        </div>
+    </div>
+    
+    <div class="button-container">
+        <button id="run-btn">Run</button>
+        <button id="format-btn">Format</button>
+    </div>
+
+    <script src="main.js"></script>
+</body>
+</html>
