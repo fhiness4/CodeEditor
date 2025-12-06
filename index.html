@@ -58,17 +58,8 @@ p {
             </div>
             <div class="editor-container" style="display: none;">
                 <textarea id="js-editor" class="code-editor" placeholder="Write your JavaScript here...">document.addEventListener('DOMContentLoaded', function() {
-    // Change background color every 2 seconds
-    setInterval(function() {
-        const colors = ['#f0f0f0', '#e6f7ff', '#fff0e6'];
-        const randomColor = colors[Math.floor(Math.random() * colors.length)];
-        document.body.style.backgroundColor = randomColor;
-    }, 2000);
+    // write your js code here.......
     
-    // Add click event to the paragraph
-    document.querySelector('p').addEventListener('click', function() {
-        this.textContent = "You clicked me! " + new Date().toLocaleTimeString();
-    });
 });</textarea>
             </div>
         </div>
