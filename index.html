@@ -10,12 +10,453 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/theme/dracula.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/hint/show-hint.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
+    <style>
+                /* Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #1e1e1e;
+            color: #ffffff;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Header */
+        .header {
+            background: #252526;
+            padding: 12px 20px;
+            border-bottom: 1px solid #3c3c3c;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 60px;
+            flex-shrink: 0;
+        }
+
+        .header h1 {
+            font-size: 1.4rem;
+            color: #4ec9b0;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .header-btn {
+            background: #0e639c;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .header-btn.active {
+            background: #4ec9b0;
+            color: #1e1e1e;
+        }
+
+        /* Main Container */
+        .main-container {
+            display: flex;
+            height: calc(100vh - 120px);
+            width: 100%;
+            position: relative;
+        }
+
+        /* Editor Panel */
+        .editor-panel {
+            width: 50%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            background: #1e1e1e;
+            position: relative;
+        }
+
+        /* Preview Panel */
+        .preview-panel {
+            width: 50%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            background: #ffffff;
+            position: relative;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            background: #2d2d2d;
+            border-bottom: 1px solid #3c3c3c;
+        }
+
+        .tab {
+            padding: 12px 20px;
+            cursor: pointer;
+            background: #2d2d2d;
+            color: #cccccc;
+            flex: 1;
+            text-align: center;
+            border-right: 1px solid #3c3c3c;
+            user-select: none;
+            transition: background 0.2s;
+        }
+
+        .tab:hover {
+            background: #383838;
+        }
+
+        .tab.active {
+            background: #1e1e1e;
+            color: #4ec9b0;
+            border-bottom: 2px solid #4ec9b0;
+        }
+
+        /* Editor Container */
+        .editor-header {
+            background: #2d2d2d;
+            padding: 8px 12px;
+            color: #cccccc;
+            font-size: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .editor-container {
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .CodeMirror {
+            height: 100% !important;
+            font-family: 'Fira Code', 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        /* Cursor-Aware Suggestions */
+        .cursor-suggestions {
+            position: absolute;
+            background: #252526;
+            border: 1px solid #4ec9b0;
+            border-radius: 6px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            display: none;
+            max-height: 300px;
+            overflow-y: auto;
+            min-width: 250px;
+        }
+
+        .cursor-suggestions.show {
+            display: block;
+        }
+
+        .suggestion-header {
+            background: #2d2d2d;
+            padding: 10px 12px;
+            color: #4ec9b0;
+            font-weight: bold;
+            font-size: 12px;
+            border-bottom: 1px solid #3c3c3c;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .suggestion-item {
+            padding: 10px 12px;
+            border-bottom: 1px solid #3c3c3c;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .suggestion-item:hover {
+            background: #383838;
+        }
+
+        .suggestion-item.selected {
+            background: #0e639c;
+        }
+
+        .suggestion-code {
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            color: #d4d4d4;
+        }
+
+        .suggestion-desc {
+            font-size: 11px;
+            color: #888;
+        }
+
+        /* Preview Container */
+        .preview-header {
+            background: #252526;
+            padding: 8px 12px;
+            color: #4ec9b0;
+            font-size: 12px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #3c3c3c;
+        }
+
+        .preview-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .preview-btn {
+            background: #3c3c3c;
+            color: #cccccc;
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .preview-btn:hover {
+            background: #4c4c4c;
+        }
+
+        .preview-btn.active {
+            background: #0e639c;
+            color: white;
+        }
+
+        .preview-content {
+            flex: 1;
+            overflow: auto;
+            background: white;
+        }
+
+        #preview-frame {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* Resizer */
+        .resizer {
+            position: absolute;
+            background: #4ec9b0;
+            opacity: 0.3;
+            z-index: 10;
+            transition: opacity 0.2s;
+        }
+
+        .resizer:hover {
+            opacity: 0.8;
+        }
+
+        .vertical-resizer {
+            width: 8px;
+            height: 100%;
+            right: -4px;
+            top: 0;
+            cursor: col-resize;
+        }
+
+        .horizontal-resizer {
+            width: 100%;
+            height: 8px;
+            bottom: -4px;
+            left: 0;
+            cursor: row-resize;
+            display: none;
+        }
+
+        /* Mobile Layout */
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+            }
+
+            .editor-panel {
+                width: 100%;
+                height: 50%;
+            }
+
+            .preview-panel {
+                width: 100%;
+                height: 50%;
+            }
+
+            .vertical-resizer {
+                display: none;
+            }
+
+            .horizontal-resizer {
+                display: block;
+            }
+
+            .header-controls {
+                display: none;
+            }
+            
+            .cursor-suggestions {
+                min-width: 200px;
+                max-height: 200px;
+            }
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+        }
+
+        .action-btn {
+            background: #0e639c;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            transition: transform 0.2s;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .action-btn:active {
+            transform: translateY(0);
+        }
+
+        #format-btn {
+            background: #4ec9b0;
+            color: #1e1e1e;
+        }
+
+        #suggest-btn {
+            background: #9b4ec9;
+            color: white;
+        }
+
+        /* Status Bar */
+        .status-bar {
+            background: #252526;
+            padding: 8px 12px;
+            color: #4ec9b0;
+            font-size: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid #3c3c3c;
+            height: 40px;
+            flex-shrink: 0;
+        }
+
+        /* Resize Overlay */
+        .resize-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            z-index: 5;
+            display: none;
+            cursor: col-resize;
+        }
+
+        .resize-overlay.active {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .resize-overlay {
+                cursor: row-resize;
+            }
+        }
+
+        /* CodeMirror Hint Customization */
+        .CodeMirror-hints {
+            background: #252526 !important;
+            border: 1px solid #4ec9b0 !important;
+            border-radius: 4px !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+        }
+
+        .CodeMirror-hint {
+            color: #d4d4d4 !important;
+            padding: 8px 12px !important;
+            border-bottom: 1px solid #3c3c3c !important;
+        }
+
+        .CodeMirror-hint-active {
+            background: #0e639c !important;
+            color: white !important;
+        }
+
+        /* Loading Indicator */
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #4ec9b0;
+            font-size: 14px;
+        }
+
+        /* Error Display */
+        .error-display {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #f44336;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 6px;
+            z-index: 2000;
+            display: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .error-display.show {
+            display: block;
+        }
+    </style>
 </head>
 <body>
     <!-- Header -->
     <header class="header">
-        <h1><i class="fas fa-code"></i> Fnesse IDE</h1>
+        <h1><i class="fas fa-code"></i> Finesse IDE</h1>
         <div class="header-controls">
             <button class="header-btn" id="theme-toggle">
                 <i class="fas fa-moon"></i> Theme
@@ -585,6 +1026,1236 @@ document.querySelectorAll('.cursor-info, .instructions li').forEach(element => {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/hint/show-hint.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/hint/anyword-hint.min.js"></script>
 
-    <script src="main.js"></script>
+    <script>
+
+
+   // ============================================
+        // FINESSE IDE SUGGESTIONS EDITOR
+        // ============================================
+
+        class CursorAwareEditor {
+            constructor() {
+                this.isMobile = window.innerWidth <= 768;
+                this.isResizing = false;
+                this.activeTab = 'html';
+                this.suggestionsEnabled = true;
+                this.isDarkTheme = true;
+                this.currentEditor = null;
+                this.suggestionsVisible = false;
+                this.selectedSuggestionIndex = 0;
+                
+                this.initializeElements();
+                this.initializeEditors();
+                this.bindEvents();
+                this.initializeResize();
+                this.runCode();
+                
+                console.log('Cursor-aware editor initialized');
+            }
+
+            initializeElements() {
+                // Get all DOM elements
+                this.elements = {
+                    // Main containers
+                    mainContainer: document.getElementById('main-container'),
+                    editorPanel: document.getElementById('editor-panel'),
+                    previewPanel: document.getElementById('preview-panel'),
+                    
+                    // Resizers
+                    verticalResizer: document.getElementById('vertical-resizer'),
+                    horizontalResizer: document.getElementById('horizontal-resizer'),
+                    resizeOverlay: document.getElementById('resize-overlay'),
+                    
+                    // Tabs and editor
+                    tabs: document.querySelectorAll('.tab'),
+                    editorTitle: document.getElementById('editor-title'),
+                    
+                    // Preview
+                    previewFrame: document.getElementById('preview-frame'),
+                    previewBtns: document.querySelectorAll('.preview-btn'),
+                    refreshPreviewBtn: document.getElementById('refresh-preview'),
+                    
+                    // Buttons
+                    runBtn: document.getElementById('run-btn'),
+                    formatBtn: document.getElementById('format-btn'),
+                    suggestBtn: document.getElementById('suggest-btn'),
+                    themeToggle: document.getElementById('theme-toggle'),
+                    suggestionsToggle: document.getElementById('suggestions-toggle'),
+                    
+                    // Cursor suggestions
+                    cursorSuggestions: document.getElementById('cursor-suggestions'),
+                    suggestionsList: document.getElementById('suggestions-list'),
+                    
+                    // Status
+                    status: document.getElementById('status'),
+                    cursorPosition: document.getElementById('cursor-position'),
+                    
+                    // Error
+                    errorDisplay: document.getElementById('error-display'),
+                    errorMessage: document.getElementById('error-message')
+                };
+            }
+
+            initializeEditors() {
+                try {
+                    // HTML Editor
+                    this.htmlEditor = CodeMirror.fromTextArea(document.getElementById('html-editor'), {
+                        mode: 'htmlmixed',
+                        theme: 'dracula',
+                        lineNumbers: true,
+                        lineWrapping: true,
+                        autoCloseTags: true,
+                        matchBrackets: true,
+                        autoCloseBrackets: true,
+                        styleActiveLine: true,
+                        extraKeys: {
+                            "Ctrl-Space": () => this.showCursorSuggestions(),
+                            "Ctrl-S": () => this.saveCode(),
+                            "Ctrl-F": "findPersistent",
+                            "Ctrl-/": "toggleComment"
+                        }
+                    });
+
+                    // CSS Editor
+                    this.cssEditor = CodeMirror.fromTextArea(document.getElementById('css-editor'), {
+                        mode: 'css',
+                        theme: 'dracula',
+                        lineNumbers: true,
+                        lineWrapping: true,
+                        matchBrackets: true,
+                        autoCloseBrackets: true,
+                        styleActiveLine: true,
+                        extraKeys: {
+                            "Ctrl-Space": () => this.showCursorSuggestions(),
+                            "Ctrl-S": () => this.saveCode(),
+                            "Ctrl-F": "findPersistent",
+                            "Ctrl-/": "toggleComment"
+                        }
+                    });
+
+                    // JavaScript Editor
+                    this.jsEditor = CodeMirror.fromTextArea(document.getElementById('js-editor'), {
+                        mode: 'javascript',
+                        theme: 'dracula',
+                        lineNumbers: true,
+                        lineWrapping: true,
+                        matchBrackets: true,
+                        autoCloseBrackets: true,
+                        styleActiveLine: true,
+                        extraKeys: {
+                            "Ctrl-Space": () => this.showCursorSuggestions(),
+                            "Ctrl-S": () => this.saveCode(),
+                            "Ctrl-F": "findPersistent",
+                            "Ctrl-/": "toggleComment"
+                        }
+                    });
+
+                    this.currentEditor = this.htmlEditor;
+                    
+                    // Update cursor position on activity
+                    [this.htmlEditor, this.cssEditor, this.jsEditor].forEach(editor => {
+                        editor.on('cursorActivity', () => {
+                            this.updateCursorPosition();
+                            this.updateCursorHighlight();
+                        });
+                    });
+
+                } catch (error) {
+                    this.showError('Failed to initialize editors: ' + error.message);
+                }
+            }
+
+            // Cursor highlight for visual feedback
+            updateCursorHighlight() {
+                // Remove existing highlight
+                const existingHighlight = document.querySelector('.cursor-highlight');
+                if (existingHighlight) {
+                    existingHighlight.remove();
+                }
+                
+                if (!this.currentEditor || this.suggestionsVisible) return;
+                
+                try {
+                    const cursor = this.currentEditor.getCursor();
+                    const coords = this.currentEditor.cursorCoords(cursor, 'window');
+                    
+                    // Create highlight element
+                    const highlight = document.createElement('div');
+                    highlight.className = 'cursor-highlight';
+                    highlight.style.cssText = `
+                        position: fixed;
+                        left: ${coords.left}px;
+                        top: ${coords.top}px;
+                        width: 2px;
+                        height: ${coords.bottom - coords.top}px;
+                        z-index: 1;
+                    `;
+                    
+                    // Add to editor container
+                    const editorContainer = this.currentEditor.getWrapperElement();
+                    editorContainer.appendChild(highlight);
+                    
+                    // Remove highlight after a while
+                    setTimeout(() => {
+                        if (highlight.parentNode) {
+                            highlight.parentNode.removeChild(highlight);
+                        }
+                    }, 1000);
+                    
+                } catch (error) {
+                    // Silently fail, highlight is just visual feedback
+                }
+            }
+
+            bindEvents() {
+                try {
+                    // Tab switching
+                    this.elements.tabs.forEach(tab => {
+                        tab.addEventListener('click', (e) => {
+                            const tabName = e.target.dataset.tab;
+                            this.switchTab(tabName);
+                            this.hideSuggestions();
+                        });
+                    });
+
+                    // Button events
+                    this.elements.runBtn.addEventListener('click', () => this.runCode());
+                    this.elements.formatBtn.addEventListener('click', () => this.formatCode());
+                    this.elements.suggestBtn.addEventListener('click', () => this.showCursorSuggestions());
+                    this.elements.themeToggle.addEventListener('click', () => this.toggleTheme());
+                    this.elements.suggestionsToggle.addEventListener('click', () => this.toggleSuggestions());
+                    this.elements.refreshPreviewBtn.addEventListener('click', () => this.runCode());
+
+                    // Preview size buttons
+                    this.elements.previewBtns.forEach(btn => {
+                        if (btn !== this.elements.refreshPreviewBtn) {
+                            btn.addEventListener('click', (e) => {
+                                const size = parseInt(e.target.closest('.preview-btn').dataset.size);
+                                this.setPreviewSize(size);
+                                this.elements.previewBtns.forEach(b => b.classList.remove('active'));
+                                e.target.closest('.preview-btn').classList.add('active');
+                            });
+                        }
+                    });
+
+                    // Auto-run on changes with debounce
+                    let timeout;
+                    const scheduleRun = () => {
+                        clearTimeout(timeout);
+                        timeout = setTimeout(() => this.runCode(), 800);
+                        this.updateStatus('Changes detected...');
+                        this.hideSuggestions();
+                    };
+
+                    this.htmlEditor.on('change', scheduleRun);
+                    this.cssEditor.on('change', scheduleRun);
+                    this.jsEditor.on('change', scheduleRun);
+
+                    // Click outside suggestions to hide
+                    document.addEventListener('click', (e) => {
+                        if (!this.elements.cursorSuggestions.contains(e.target) && 
+                            e.target !== this.elements.suggestBtn) {
+                            this.hideSuggestions();
+                        }
+                    });
+
+                    // Keyboard shortcuts
+                    document.addEventListener('keydown', (e) => {
+                        // Ctrl+Space for cursor suggestions
+                        if (e.ctrlKey && e.key === ' ') {
+                            e.preventDefault();
+                            this.showCursorSuggestions();
+                        }
+                        
+                        // Escape to hide suggestions
+                        if (e.key === 'Escape') {
+                            this.hideSuggestions();
+                        }
+                        
+                        // Arrow keys for suggestion navigation
+                        if (this.suggestionsVisible) {
+                            if (e.key === 'ArrowDown') {
+                                e.preventDefault();
+                                this.navigateSuggestions(1);
+                            }
+                            if (e.key === 'ArrowUp') {
+                                e.preventDefault();
+                                this.navigateSuggestions(-1);
+                            }
+                            if (e.key === 'Enter') {
+                                e.preventDefault();
+                                this.insertSelectedSuggestion();
+                            }
+                        }
+                        
+                        // Ctrl+S to save
+                        if (e.ctrlKey && e.key === 's') {
+                            e.preventDefault();
+                            this.saveCode();
+                        }
+                    });
+
+                    // Window resize
+                    window.addEventListener('resize', () => {
+                        const newIsMobile = window.innerWidth <= 768;
+                        if (newIsMobile !== this.isMobile) {
+                            this.isMobile = newIsMobile;
+                            this.adjustLayout();
+                        }
+                        this.hideSuggestions();
+                    });
+
+                    // Scroll to hide suggestions
+                    window.addEventListener('scroll', () => {
+                        if (this.suggestionsVisible) {
+                            this.positionSuggestions();
+                        }
+                    });
+
+                } catch (error) {
+                    this.showError('Failed to bind events: ' + error.message);
+                }
+            }
+
+            // CURSOR-AWARE SUGGESTIONS
+            showCursorSuggestions() {
+                try {
+                    if (!this.suggestionsEnabled) {
+                        this.updateStatus('Suggestions are disabled');
+                        return;
+                    }
+                    
+                    // Get current cursor position
+                    const cursor = this.currentEditor.getCursor();
+                    const token = this.currentEditor.getTokenAt(cursor);
+                    
+                    // Get context-aware suggestions
+                    const suggestions = this.getContextAwareSuggestions(cursor, token);
+                    
+                    if (suggestions.length === 0) {
+                        this.updateStatus('No suggestions available for this context');
+                        return;
+                    }
+                    
+                    // Display suggestions
+                    this.displayCursorSuggestions(suggestions, cursor);
+                    
+                    // Position suggestions at cursor
+                    this.positionSuggestions();
+                    
+                    this.updateStatus(`Showing ${suggestions.length} context-aware suggestions`);
+                    
+                } catch (error) {
+                    this.showError('Failed to show suggestions: ' + error.message);
+                }
+            }
+
+            getContextAwareSuggestions(cursor, token) {
+                const line = this.currentEditor.getLine(cursor.line);
+                const beforeCursor = line.substring(0, cursor.ch);
+                const afterCursor = line.substring(cursor.ch);
+                
+                // Determine context
+                const context = this.determineContext(beforeCursor, afterCursor, token);
+                
+                // Get suggestions based on context
+                return this.getSuggestionsForContext(context);
+            }
+
+            determineContext(beforeCursor, afterCursor, token) {
+                // HTML context detection
+                if (this.activeTab === 'html') {
+                    if (beforeCursor.includes('<') && !beforeCursor.includes('>')) {
+                        // Inside opening tag
+                        if (beforeCursor.includes('=') || token.type === 'attribute') {
+                            return 'html-attribute-value';
+                        }
+                        if (beforeCursor.trim().endsWith('<')) {
+                            return 'html-tag-start';
+                        }
+                        return 'html-tag-name';
+                    }
+                    if (beforeCursor.includes('</')) {
+                        return 'html-closing-tag';
+                    }
+                    if (token.string === '"' || token.string === "'") {
+                        return 'html-attribute-value';
+                    }
+                    return 'html-general';
+                }
+                
+                // CSS context detection
+                if (this.activeTab === 'css') {
+                    if (beforeCursor.includes(':')) {
+                        return 'css-property-value';
+                    }
+                    if (beforeCursor.includes('{') && !beforeCursor.includes('}')) {
+                        return 'css-property';
+                    }
+                    if (token.string === '.') {
+                        return 'css-class';
+                    }
+                    if (token.string === '#') {
+                        return 'css-id';
+                    }
+                    return 'css-general';
+                }
+                
+                // JavaScript context detection
+                if (this.activeTab === 'js') {
+                    if (beforeCursor.includes('.')) {
+                        return 'js-property';
+                    }
+                    if (beforeCursor.includes('(') && !beforeCursor.includes(')')) {
+                        return 'js-function-args';
+                    }
+                    if (token.type === 'variable' || token.type === 'property') {
+                        return 'js-variable';
+                    }
+                    return 'js-general';
+                }
+                
+                return 'general';
+            }
+
+            getSuggestionsForContext(context) {
+                const suggestions = {
+                    // HTML contexts
+                    'html-tag-start': [
+                        { code: 'div', desc: 'Division element' },
+                        { code: 'span', desc: 'Inline container' },
+                        { code: 'p', desc: 'Paragraph' },
+                        { code: 'h1', desc: 'Heading 1' },
+                        { code: 'button', desc: 'Clickable button' }
+                    ],
+                    'html-tag-name': [
+                        { code: 'class=""', desc: 'class - CSS class' },
+                    { code: 'id=""', desc: 'id - Element ID' },
+                    { code: 'style=""', desc: 'style - Inline CSS' },
+                    { code: 'href=""', desc: 'href - Link URL' },
+                    { code: 'src=""', desc: 'src - Source URL' },
+                    { code: 'alt=""', desc: 'alt - Alternative Text' },
+                    { code: 'type=""', desc: 'type - Input type' },
+                    { code: 'name=""', desc: 'name - Form field name' },
+                    { code: 'value=""', desc: 'value - Input value' },
+                    { code: 'placeholder=""', desc: 'placeholder - Input hint' },
+                        { code: 'onclick=""', desc: 'Click handler' }
+                    ],
+                    'html-attribute-value': [
+                        { code: '"container"', desc: 'Container class' },
+                        { code: '"btn"', desc: 'Button class' },
+                        { code: '"text"', desc: 'Text input type' },
+                        { code: '"submit"', desc: 'Submit button type' }
+                    ],
+                    'html-general': [
+                        { code: '<div></div>', desc: '<div> -div' },
+                        { code: '<span></span>', desc: ' -span' },
+                        { code: '<p></p>', desc: '-p' },
+                        { code: '<!--  -->', desc: '--Comment' },
+                    { code: '<h1></h1>', desc: '<h1> - Heading 1' },
+                    { code: '<h2> </h2>', desc: '<h2> - Heading 2' },
+                    { code: '<h3> </3>', desc: '<h3> - Heading 3' },
+                    { code: '<a href=""/>', desc: '<a> - Link' },
+                    { code: '<img src="" alt=""/>', desc: '<img> - Image' },
+                    { code: '<ul> <ul/>', desc: '<ul> - Unordered list' },
+                    { code: '<ol> <ol/>', desc: '<ol> - Ordered list' },
+                    { code: '<li> <li/>', desc: '<li> - List item' },
+                    { code: '<table>', desc: '<table> - Table' },
+                    { code: '<tr> <tr/>', desc: '<tr> - Table row' },
+                    { code: '<td> <td/>', desc: '<td> - Table cell' },
+                    { code: '<form> <form/>', desc: '<form> - Form' },
+                    { code: '<input/>', desc: '<input> - Input field' },
+                    { code: '<button> </button>', desc: '<button> - Button' },
+                    { code: '<textarea> </textarea>', desc: '<textarea> - Text area' },
+                    { code: '<select> </select>', desc: '<select> - Dropdown' },
+                    { code: '<option> </option>', desc: '<option> - Dropdown option' }
+                    ],
+                    
+                    // CSS contexts
+                    'css-property': [
+                         { code: 'color: |', desc: 'Text color' },
+                        { code: 'background: |', desc: 'Background' },
+                        { code: 'margin: |', desc: 'Margin' },
+                    { code: 'background-color: ', desc: 'background-color - Background color' },
+                    { code: 'font-size: ', desc: 'font-size - Text size' },
+                    { code: 'font-weight: ', desc: 'font-weight - Text weight' },
+                    { code: 'margin: ', desc: 'margin - Outer spacing' },
+                    { code: 'padding: ', desc: 'padding - Inner spacing' },
+                    { code: 'border: ', desc: 'border - Element border' },
+                    { code: 'display: ', desc: 'display - Display type' },
+                    { code: 'width: ', desc: 'width - Element width' },
+                    { code: 'height: ', desc: 'height - Element height' },
+                    { code: 'position: ', desc: 'position - Positioning' },
+                    { code: 'top: ', desc: 'top - Top position' },
+                    { code: 'left: ', desc: 'left - Left position' },
+                    { code: 'right: ', desc: 'right - Right position' },
+                    { code: 'bottom: ', desc: 'bottom - Bottom position' },
+                    { code: 'flex: ', desc: 'flex - Flexbox property' },
+                    { code: 'justify-content: ', desc: 'justify-content - Flex alignment' },
+                    { code: 'align-items: ', desc: 'align-items - Flex alignment' },
+                    { code: 'text-align: ', desc: 'text-align - Text alignment' },
+                    { code: 'border-radius: ', desc: 'border-radius - Rounded corners' },
+                        { code: '.container { | }', desc: 'Container class' },
+                        { code: '#id { | }', desc: 'ID selector' },
+                        { code: '@media (max-width: 768px) { | }', desc: 'Media query' }
+                    ],
+                    'css-property-value': [
+                         { code: 'red', desc: 'red - Color value' },
+                    { code: '#ffffff', desc: '#ffffff - Hex color' },
+                    { code: 'rgba(0,0,0,0.5)', desc: 'rgba() - Color with alpha' },
+                    { code: '10px', desc: '10px - Pixel value' },
+                    { code: '1em', desc: '1em - Em value' },
+                    { code: '1rem', desc: '1rem - Rem value' },
+                    { code: '100%', desc: '100% - Percentage' },
+                    { code: 'block', desc: 'block - Display block' },
+                    { code: 'inline-block', desc: 'inline-block - Display inline-block' },
+                    { code: 'flex', desc: 'flex - Display flex' },
+                    { code: 'grid', desc: 'grid - Display grid' },
+                    { code: 'none', desc: 'none - Display none' },
+                    { code: 'center', desc: 'center - Center alignment' },
+                    { code: 'space-between', desc: 'space-between - Flex spacing' },
+                    { code: 'absolute', desc: 'absolute - Position absolute' },
+                    { code: 'relative', desc: 'relative - Position relative' },
+                    { code: 'fixed', desc: 'fixed - Position fixed' }
+                    ],
+                    'css-general': [
+                         { code: 'color: |', desc: 'Text color' },
+                        { code: 'background: |', desc: 'Background' },
+                        { code: 'margin: |', desc: 'Margin' },
+                    { code: 'background-color: ', desc: 'background-color - Background color' },
+                    { code: 'font-size: ', desc: 'font-size - Text size' },
+                    { code: 'font-weight: ', desc: 'font-weight - Text weight' },
+                    { code: 'margin: ', desc: 'margin - Outer spacing' },
+                    { code: 'padding: ', desc: 'padding - Inner spacing' },
+                    { code: 'border: ', desc: 'border - Element border' },
+                    { code: 'display: ', desc: 'display - Display type' },
+                    { code: 'width: ', desc: 'width - Element width' },
+                    { code: 'height: ', desc: 'height - Element height' },
+                    { code: 'position: ', desc: 'position - Positioning' },
+                    { code: 'top: ', desc: 'top - Top position' },
+                    { code: 'left: ', desc: 'left - Left position' },
+                    { code: 'right: ', desc: 'right - Right position' },
+                    { code: 'bottom: ', desc: 'bottom - Bottom position' },
+                    { code: 'flex: ', desc: 'flex - Flexbox property' },
+                    { code: 'justify-content: ', desc: 'justify-content - Flex alignment' },
+                    { code: 'align-items: ', desc: 'align-items - Flex alignment' },
+                    { code: 'text-align: ', desc: 'text-align - Text alignment' },
+                    { code: 'border-radius: ', desc: 'border-radius - Rounded corners' },
+                        { code: '.container { | }', desc: 'Container class' },
+                        { code: '#id { | }', desc: 'ID selector' },
+                        { code: '@media (max-width: 768px) { | }', desc: 'Media query' }
+                    ],
+                    
+                    // JavaScript contexts
+                    'js-variable': [
+                        { code: 'let | = ', desc: 'Declare variable' },
+                        { code: 'const | = ', desc: 'Declare constant' },
+                        { code: 'var | = ', desc: 'Declare variable (old)' }
+                    ],
+                    'js-function-args': [
+                       { code: 'console.log()', desc: 'console.log() - Log to console' },
+                    { code: 'document.querySelector()', desc: 'document.querySelector() - Select element' },
+                    { code: 'document.getElementById()', desc: 'document.getElementById() - Get element by ID' },
+                    { code: 'document.createElement()', desc: 'document.createElement() - Create element' },
+                    { code: 'addEventListener()', desc: 'addEventListener() - Add event listener' },
+                    { code: 'setTimeout()', desc: 'setTimeout() - Delay execution' },
+                    { code: 'setInterval()', desc: 'setInterval() - Repeated execution' },
+                    { code: 'clearTimeout()', desc: 'clearTimeout() - Clear timeout' },
+                    { code: 'clearInterval()', desc: 'clearInterval() - Clear interval' },
+                    { code: 'Math.random()', desc: 'Math.random() - Random number' },
+                    { code: 'Math.floor()', desc: 'Math.floor() - Round down' },
+                    { code: 'Math.round()', desc: 'Math.round() - Round to nearest' },
+                    { code: 'parseInt()', desc: 'parseInt() - String to integer' },
+                    { code: 'parseFloat()', desc: 'parseFloat() - String to float' },
+                    { code: 'JSON.parse()', desc: 'JSON.parse() - Parse JSON' },
+                    { code: 'JSON.stringify()', desc: 'JSON.stringify() - Stringify JSON' },
+                    { code: 'Array.isArray()', desc: 'Array.isArray() - Check if array' },
+                    { code: 'String()', desc: 'String() - Convert to string' },
+                    { code: 'Number()', desc: 'Number() - Convert to number' },
+                    { code: 'Boolean()', desc: 'Boolean() - Convert to boolean' }
+                    ],
+                    'js-general': [
+                        { code: 'function |() { }', desc: 'Function declaration' },
+                        { code: 'console.log(|)', desc: 'Log to console' },
+                        { code: 'document.querySelector("|")', desc: 'Select element' },
+                        { code: 'addEventListener("click", |)', desc: 'Event listener' },
+                         { code: 'if () { }', desc: 'if - Conditional statement' },
+                    { code: 'else if () { }', desc: 'else if - Else if statement' },
+                    { code: 'else { }', desc: 'else - Else statement' },
+                    { code: 'for (let i = 0; i < length; i++) { }', desc: 'for - For loop' },
+                    { code: 'while () { }', desc: 'while - While loop' },
+                    { code: 'do { } while ()', desc: 'do while - Do while loop' },
+                    { code: 'switch () { case : break; }', desc: 'switch - Switch statement' },
+                    { code: 'try { } catch (e) { }', desc: 'try/catch - Error handling' },
+                    { code: 'function name() { }', desc: 'function - Function declaration' },
+                    { code: 'const name = ', desc: 'const - Constant variable' },
+                    { code: 'let name = ', desc: 'let - Block-scoped variable' },
+                    { code: 'var name = ', desc: 'var - Function-scoped variable' },
+                    { code: 'return ', desc: 'return - Return value' },
+                    { code: 'break', desc: 'break - Break loop/switch' },
+                    { code: 'continue', desc: 'continue - Continue loop' }
+                    ]
+                };
+                
+                return suggestions[context] || this.getGeneralSuggestions();
+            }
+
+            getGeneralSuggestions() {
+                if (this.activeTab === 'html') {
+                    return [
+                        { code: '<div>|</div>', desc: 'Division element' },
+                        { code: '<span>|</span>', desc: 'Inline container' },
+                        { code: '<p>|</p>', desc: 'Paragraph' },
+                        { code: '<button>|</button>', desc: 'Button' },
+                        { code: '<input type="text">', desc: 'Text input' },
+                    { code: '<h1>h1</h1>', desc: '<h1> - Heading 1' },
+                    { code: '<h2>', desc: '<h2> - Heading 2' },
+                    { code: '<h3>', desc: '<h3> - Heading 3' },
+                    { code: '<a href="">', desc: '<a> - Link' },
+                    { code: '<img src="" alt="">', desc: '<img> - Image' },
+                    { code: '<ul>', desc: '<ul> - Unordered list' },
+                    { code: '<ol>', desc: '<ol> - Ordered list' },
+                    { code: '<li>', desc: '<li> - List item' },
+                    { code: '<table>', desc: '<table> - Table' },
+                    { code: '<tr>', desc: '<tr> - Table row' },
+                    { code: '<td>', desc: '<td> - Table cell' },
+                    { code: '<form>', desc: '<form> - Form' },
+                    { code: '<input>', desc: '<input> - Input field' },
+                    { code: '<button>', desc: '<button> - Button' },
+                    { code: '<textarea>', desc: '<textarea> - Text area' },
+                    { code: '<select>', desc: '<select> - Dropdown' },
+                    { code: '<option>', desc: '<option> - Dropdown option' }
+                    ];
+                }
+                if (this.activeTab === 'css') {
+                    return [
+                        { code: 'color: #ffffff;', desc: 'Text color' },
+                        { code: 'background: #000000;', desc: 'Background' },
+                        { code: 'font-size: 16px;', desc: 'Font size' },
+                        { code: 'margin: 10px;', desc: 'Margin' }
+                    ];
+                }
+                return [
+                    { code: 'console.log("|");', desc: 'Log message' },
+                    { code: 'function name() { | }', desc: 'Function' },
+                    { code: 'const variable = |;', desc: 'Variable' }
+                ];
+            }
+
+            displayCursorSuggestions(suggestions, cursor) {
+                try {
+                    this.elements.suggestionsList.innerHTML = '';
+                    this.suggestionsVisible = true;
+                    this.selectedSuggestionIndex = 0;
+                    
+                    suggestions.forEach((suggestion, index) => {
+                        const item = document.createElement('div');
+                        item.className = 'suggestion-item';
+                        item.dataset.index = index;
+                        
+                        // Replace | with cursor position marker
+                        const displayCode = suggestion.code.replace(/\|/g, '<span style="color: #4ec9b0;">█</span>');
+                        
+                        item.innerHTML = `
+                            <div class="suggestion-code">${displayCode}</div>
+                            <div class="suggestion-desc">${suggestion.desc}</div>
+                        `;
+                        
+                        item.addEventListener('click', () => {
+                            this.insertSuggestionAtCursor(suggestion.code, cursor);
+                            this.hideSuggestions();
+                        });
+                        
+                        item.addEventListener('mouseenter', () => {
+                            this.selectedSuggestionIndex = index;
+                            this.updateSelectedSuggestion();
+                        });
+                        
+                        this.elements.suggestionsList.appendChild(item);
+                    });
+                    
+                    this.elements.cursorSuggestions.classList.add('show');
+                    this.updateSelectedSuggestion();
+                    
+                } catch (error) {
+                    this.showError('Failed to display suggestions: ' + error.message);
+                }
+            }
+
+            positionSuggestions() {
+                try {
+                    if (!this.suggestionsVisible || !this.currentEditor) return;
+                    
+                    const cursor = this.currentEditor.getCursor();
+                    const coords = this.currentEditor.cursorCoords(cursor, 'window');
+                    
+                    // Get viewport dimensions
+                    const viewportWidth = window.innerWidth;
+                    const viewportHeight = window.innerHeight;
+                    
+                    // Calculate position
+                    let left = coords.left;
+                    let top = coords.bottom + 5;
+                    
+                    // Adjust for right edge
+                    const suggestionsWidth = this.elements.cursorSuggestions.offsetWidth;
+                    if (left + suggestionsWidth > viewportWidth - 20) {
+                        left = viewportWidth - suggestionsWidth - 20;
+                    }
+                    
+                    // Adjust for bottom edge
+                    const suggestionsHeight = this.elements.cursorSuggestions.offsetHeight;
+                    if (top + suggestionsHeight > viewportHeight - 20) {
+                        top = coords.top - suggestionsHeight - 5;
+                    }
+                    
+                    // Ensure minimum position
+                    left = Math.max(10, left);
+                    top = Math.max(10, top);
+                    
+                    // Apply position
+                    this.elements.cursorSuggestions.style.left = left + 'px';
+                    this.elements.cursorSuggestions.style.top = top + 'px';
+                    
+                } catch (error) {
+                    // Silently fail, suggestions will stay in last position
+                }
+            }
+
+            navigateSuggestions(direction) {
+                const items = this.elements.suggestionsList.querySelectorAll('.suggestion-item');
+                if (items.length === 0) return;
+                
+                this.selectedSuggestionIndex += direction;
+                
+                // Wrap around
+                if (this.selectedSuggestionIndex < 0) {
+                    this.selectedSuggestionIndex = items.length - 1;
+                }
+                if (this.selectedSuggestionIndex >= items.length) {
+                    this.selectedSuggestionIndex = 0;
+                }
+                
+                this.updateSelectedSuggestion();
+                
+                // Scroll into view
+                const selectedItem = items[this.selectedSuggestionIndex];
+                selectedItem.scrollIntoView({ block: 'nearest' });
+            }
+
+            updateSelectedSuggestion() {
+                const items = this.elements.suggestionsList.querySelectorAll('.suggestion-item');
+                items.forEach((item, index) => {
+                    if (index === this.selectedSuggestionIndex) {
+                        item.classList.add('selected');
+                    } else {
+                        item.classList.remove('selected');
+                    }
+                });
+            }
+
+            insertSelectedSuggestion() {
+                const items = this.elements.suggestionsList.querySelectorAll('.suggestion-item');
+                if (items.length === 0) return;
+                
+                const selectedItem = items[this.selectedSuggestionIndex];
+                const index = parseInt(selectedItem.dataset.index);
+                
+                const cursor = this.currentEditor.getCursor();
+                const suggestions = this.getContextAwareSuggestions(cursor, this.currentEditor.getTokenAt(cursor));
+                
+                if (suggestions[index]) {
+                    this.insertSuggestionAtCursor(suggestions[index].code, cursor);
+                    this.hideSuggestions();
+                }
+            }
+
+            insertSuggestionAtCursor(code, cursor) {
+                try {
+                    // Remove cursor marker (|)
+                    const cleanCode = code.replace(/\|/g, '');
+                    
+                    // Insert at cursor position
+                    this.currentEditor.replaceRange(cleanCode, cursor);
+                    
+                    // Move cursor to end of inserted text if there was a marker
+                    if (code.includes('|')) {
+                        const newCursor = {
+                            line: cursor.line,
+                            ch: cursor.ch + cleanCode.length
+                        };
+                        this.currentEditor.setCursor(newCursor);
+                    }
+                    
+                    this.updateStatus('Suggestion inserted at cursor');
+                    
+                } catch (error) {
+                    this.showError('Failed to insert suggestion: ' + error.message);
+                }
+            }
+
+            hideSuggestions() {
+                this.suggestionsVisible = false;
+                this.elements.cursorSuggestions.classList.remove('show');
+                this.elements.suggestionsList.innerHTML = '';
+            }
+
+            // ... [Rest of the methods remain the same as previous version: switchTab, runCode, formatCode, etc.]
+
+            switchTab(tabName) {
+                try {
+                    this.activeTab = tabName;
+                    this.hideSuggestions();
+                    
+                    // Update active tab UI
+                    this.elements.tabs.forEach(tab => tab.classList.remove('active'));
+                    document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+                    this.elements.editorTitle.textContent = tabName.toUpperCase();
+                    
+                    // Show/hide editors
+                    const editors = {
+                        html: this.htmlEditor,
+                        css: this.cssEditor,
+                        js: this.jsEditor
+                    };
+                    
+                    // Hide all editors first
+                    [this.htmlEditor, this.cssEditor, this.jsEditor].forEach(editor => {
+                        editor.getWrapperElement().style.display = 'none';
+                    });
+                    
+                    // Show current editor
+                    this.currentEditor = editors[tabName];
+                    this.currentEditor.getWrapperElement().style.display = 'block';
+                    this.currentEditor.refresh();
+                    
+                    this.updateStatus(`Switched to ${tabName} editor`);
+                    this.updateCursorPosition();
+                    
+                } catch (error) {
+                    this.showError('Failed to switch tab: ' + error.message);
+                }
+            }
+
+            runCode() {
+                try {
+                    const html = this.htmlEditor.getValue();
+                    const css = this.cssEditor.getValue();
+                    const js = this.jsEditor.getValue();
+                    
+                    const previewDoc = this.elements.previewFrame.contentDocument || 
+                                      this.elements.previewFrame.contentWindow.document;
+                    
+                    previewDoc.open();
+                    previewDoc.write(`
+                        <!DOCTYPE html>
+                        <html>
+                        <head>
+                            <meta charset="UTF-8">
+                            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+                            <style>${css}</style>
+                        </head>
+                        <body>
+                            ${html}
+                            <script>${js}<\/script>
+                        </body>
+                        </html>
+                    `);
+                    previewDoc.close();
+                    
+                    this.updateStatus('Preview updated');
+                    
+                } catch (error) {
+                    this.showError('Failed to run code: ' + error.message);
+                }
+            }
+
+            formatCode() {
+                try {
+                    switch (this.activeTab) {
+                        case 'html':
+                            const htmlCode = this.htmlEditor.getValue();
+                            const formattedHTML = this.formatHTML(htmlCode);
+                            this.htmlEditor.setValue(formattedHTML);
+                            break;
+                        case 'css':
+                            const linesCSS = this.cssEditor.lineCount();
+                            for (let i = 0; i < linesCSS; i++) {
+                                this.cssEditor.indentLine(i);
+                            }
+                            break;
+                        case 'js':
+                            const linesJS = this.jsEditor.lineCount();
+                            for (let i = 0; i < linesJS; i++) {
+                                this.jsEditor.indentLine(i);
+                            }
+                            break;
+                    }
+                    this.updateStatus('Code formatted');
+                } catch (error) {
+                    this.showError('Failed to format code: ' + error.message);
+                }
+            }
+
+            formatHTML(code) {
+                let formatted = '';
+                let indent = 0;
+                const lines = code.split('\n');
+                
+                for (let line of lines) {
+                    line = line.trim();
+                    if (!line) continue;
+                    
+                    if (line.startsWith('</')) {
+                        indent--;
+                    }
+                    
+                    formatted += '  '.repeat(Math.max(0, indent)) + line + '\n';
+                    
+                    if (line.startsWith('<') && !line.startsWith('</') && !line.includes('/>') && !line.endsWith('/>')) {
+                        if (!line.includes('</')) {
+                            indent++;
+                        }
+                    }
+                }
+                
+                return formatted.trim();
+            }
+
+            toggleTheme() {
+                try {
+                    this.isDarkTheme = !this.isDarkTheme;
+                    const theme = this.isDarkTheme ? 'dracula' : 'default';
+                    
+                    [this.htmlEditor, this.cssEditor, this.jsEditor].forEach(editor => {
+                        editor.setOption('theme', theme);
+                    });
+                    
+                    this.elements.themeToggle.innerHTML = this.isDarkTheme ? 
+                        '<i class="fas fa-moon"></i> Dark' : 
+                        '<i class="fas fa-sun"></i> Light';
+                    
+                    this.updateStatus(`Switched to ${this.isDarkTheme ? 'dark' : 'light'} theme`);
+                } catch (error) {
+                    this.showError('Failed to toggle theme: ' + error.message);
+                }
+            }
+
+            toggleSuggestions() {
+                try {
+                    this.suggestionsEnabled = !this.suggestionsEnabled;
+                    
+                    if (this.suggestionsEnabled) {
+                        this.elements.suggestionsToggle.classList.add('active');
+                        this.elements.suggestionsToggle.innerHTML = '<i class="fas fa-lightbulb"></i> On';
+                        this.updateStatus('Cursor suggestions enabled');
+                    } else {
+                        this.elements.suggestionsToggle.classList.remove('active');
+                        this.elements.suggestionsToggle.innerHTML = '<i class="fas fa-lightbulb"></i> Off';
+                        this.hideSuggestions();
+                        this.updateStatus('Cursor suggestions disabled');
+                    }
+                } catch (error) {
+                    this.showError('Failed to toggle suggestions: ' + error.message);
+                }
+            }
+
+            setPreviewSize(percentage) {
+                try {
+                    const containerWidth = this.elements.mainContainer.offsetWidth;
+                    const containerHeight = this.elements.mainContainer.offsetHeight;
+                    
+                    if (this.isMobile) {
+                        const editorHeight = (containerHeight * percentage) / 100;
+                        const previewHeight = containerHeight - editorHeight;
+                        
+                        this.elements.editorPanel.style.height = `${editorHeight}px`;
+                        this.elements.previewPanel.style.height = `${previewHeight}px`;
+                    } else {
+                        const editorWidth = (containerWidth * percentage) / 90;
+                        const previewWidth = containerWidth - editorWidth;
+                        
+                        this.elements.editorPanel.style.width = `${editorWidth}px`;
+                        this.elements.previewPanel.style.width = `${previewWidth}px`;
+                    }
+                    
+                    // Refresh editors
+                    setTimeout(() => {
+                        this.htmlEditor.refresh();
+                        this.cssEditor.refresh();
+                        this.jsEditor.refresh();
+                    }, 10);
+                    
+                    this.updateStatus(`Preview size set to ${percentage}%`);
+                    
+                } catch (error) {
+                    this.showError('Failed to set preview size: ' + error.message);
+                }
+            }
+
+            adjustLayout() {
+                try {
+                    if (this.isMobile) {
+                        this.elements.editorPanel.style.width = '100%';
+                        this.elements.previewPanel.style.width = '100%';
+                        this.elements.editorPanel.style.height = '50%';
+                        this.elements.previewPanel.style.height = '50%';
+                    } else {
+                        this.elements.editorPanel.style.height = '100%';
+                        this.elements.previewPanel.style.height = '100%';
+                        this.elements.editorPanel.style.width = '50%';
+                        this.elements.previewPanel.style.width = '50%';
+                    }
+                    
+                    // Refresh editors
+                    setTimeout(() => {
+                        this.htmlEditor.refresh();
+                        this.cssEditor.refresh();
+                        this.jsEditor.refresh();
+                    }, 100);
+                    
+                } catch (error) {
+                    this.showError('Failed to adjust layout: ' + error.message);
+                }
+            }
+
+            initializeResize() {
+                try {
+                    const startResize = (e) => {
+                        e.preventDefault();
+                        this.isResizing = true;
+                        this.hideSuggestions();
+                        this.elements.resizeOverlay.classList.add('active');
+                        document.body.style.cursor = this.isMobile ? 'row-resize' : 'col-resize';
+                        document.body.style.userSelect = 'none';
+
+                        const startX = e.clientX || e.touches[0].clientX;
+                        const startY = e.clientY || e.touches[0].clientY;
+                        const startWidth = this.elements.editorPanel.offsetWidth;
+                        const startHeight = this.elements.editorPanel.offsetHeight;
+
+                        const handleResize = (moveEvent) => {
+                            if (!this.isResizing) return;
+                            moveEvent.preventDefault();
+
+                            if (this.isMobile) {
+                                const currentY = moveEvent.clientY || moveEvent.touches[0].clientY;
+                                const deltaY = currentY - startY;
+                                const containerHeight = this.elements.mainContainer.offsetHeight;
+                                const minHeight = 50;
+
+                                let newEditorHeight = startHeight + deltaY;
+                                newEditorHeight = Math.max(minHeight, Math.min(newEditorHeight, containerHeight - minHeight));
+                                let newPreviewHeight = containerHeight - newEditorHeight;
+
+                                this.elements.editorPanel.style.height = `${newEditorHeight}px`;
+                                this.elements.previewPanel.style.height = `${newPreviewHeight}px`;
+                            } else {
+                                const currentX = moveEvent.clientX || moveEvent.touches[0].clientX;
+                                const deltaX = currentX - startX;
+                                const containerWidth = this.elements.mainContainer.offsetWidth;
+                                const minWidth = 300;
+
+                                let newEditorWidth = startWidth + deltaX;
+                                newEditorWidth = Math.max(minWidth, Math.min(newEditorWidth, containerWidth - minWidth));
+                                let newPreviewWidth = containerWidth - newEditorWidth;
+
+                                this.elements.editorPanel.style.width = `${newEditorWidth}px`;
+                                this.elements.previewPanel.style.width = `${newPreviewWidth}px`;
+                            }
+
+                            setTimeout(() => {
+                                this.htmlEditor.refresh();
+                                this.cssEditor.refresh();
+                                this.jsEditor.refresh();
+                            }, 10);
+                        };
+
+                        const stopResize = () => {
+                            if (!this.isResizing) return;
+                            this.isResizing = false;
+                            this.elements.resizeOverlay.classList.remove('active');
+                            document.body.style.cursor = '';
+                            document.body.style.userSelect = '';
+
+                            document.removeEventListener('mousemove', handleResize);
+                            document.removeEventListener('mouseup', stopResize);
+                            document.removeEventListener('touchmove', handleResize);
+                            document.removeEventListener('touchend', stopResize);
+
+                            this.saveLayout();
+                            this.updateStatus('Layout saved');
+                        };
+
+                        document.addEventListener('mousemove', handleResize);
+                        document.addEventListener('mouseup', stopResize);
+                        document.addEventListener('touchmove', handleResize, { passive: false });
+                        document.addEventListener('touchend', stopResize);
+                    };
+
+                    this.elements.verticalResizer.addEventListener('mousedown', startResize);
+                    this.elements.verticalResizer.addEventListener('touchstart', startResize, { passive: false });
+                    this.elements.horizontalResizer.addEventListener('mousedown', startResize);
+                    this.elements.horizontalResizer.addEventListener('touchstart', startResize, { passive: false });
+
+                } catch (error) {
+                    this.showError('Failed to initialize resize: ' + error.message);
+                }
+            }
+
+            saveCode() {
+                try {
+                    const codeData = {
+                        html: this.htmlEditor.getValue(),
+                        css: this.cssEditor.getValue(),
+                        js: this.jsEditor.getValue()
+                    };
+                    
+                    localStorage.setItem('cursor-editor-code', JSON.stringify(codeData));
+                    this.updateStatus('Code saved');
+                    this.showNotification('Code saved!');
+                    
+                } catch (error) {
+                    this.showError('Failed to save code: ' + error.message);
+                }
+            }
+
+            saveLayout() {
+                try {
+                    const layout = {
+                        editorWidth: this.elements.editorPanel.style.width,
+                        editorHeight: this.elements.editorPanel.style.height,
+                        previewWidth: this.elements.previewPanel.style.width,
+                        previewHeight: this.elements.previewPanel.style.height,
+                        isMobile: this.isMobile
+                    };
+                    
+                    localStorage.setItem('cursor-editor-layout', JSON.stringify(layout));
+                } catch (error) {
+                    this.showError('Failed to save layout: ' + error.message);
+                }
+            }
+
+            loadCode() {
+                try {
+                    const saved = localStorage.getItem('cursor-editor-code');
+                    if (saved) {
+                        const codeData = JSON.parse(saved);
+                        this.htmlEditor.setValue(codeData.html || '');
+                        this.cssEditor.setValue(codeData.css || '');
+                        this.jsEditor.setValue(codeData.js || '');
+                        this.updateStatus('Loaded saved code');
+                    }
+                } catch (error) {
+                    console.log('No saved code found');
+                }
+            }
+
+            loadLayout() {
+                try {
+                    const saved = localStorage.getItem('cursor-editor-layout');
+                    if (saved) {
+                        const layout = JSON.parse(saved);
+                        if (layout.isMobile === this.isMobile) {
+                            this.elements.editorPanel.style.width = layout.editorWidth || '';
+                            this.elements.editorPanel.style.height = layout.editorHeight || '';
+                            this.elements.previewPanel.style.width = layout.previewWidth || '';
+                            this.elements.previewPanel.style.height = layout.previewHeight || '';
+                        }
+                    }
+                } catch (error) {
+                    console.log('No saved layout found');
+                }
+            }
+
+            updateStatus(message) {
+                try {
+                    this.elements.status.textContent = message;
+                    console.log('Status:', message);
+                } catch (error) {
+                    console.error('Failed to update status:', error);
+                }
+            }
+
+            updateCursorPosition() {
+                try {
+                    if (this.currentEditor) {
+                        const cursor = this.currentEditor.getCursor();
+                        this.elements.cursorPosition.textContent = `Line ${cursor.line + 1}, Col ${cursor.ch + 1}`;
+                    }
+                } catch (error) {
+                    console.error('Failed to update cursor position:', error);
+                }
+            }
+
+            showError(message) {
+                try {
+                    this.elements.errorMessage.textContent = message;
+                    this.elements.errorDisplay.classList.add('show');
+                    
+                    console.error('Editor Error:', message);
+                    
+                    setTimeout(() => {
+                        this.elements.errorDisplay.classList.remove('show');
+                    }, 5000);
+                } catch (error) {
+                    console.error('Failed to show error:', error);
+                }
+            }
+
+            showNotification(message) {
+                try {
+                    const notification = document.createElement('div');
+                    notification.style.cssText = `
+                        position: fixed;
+                        top: 20px;
+                        right: 20px;
+                        background: #4ec9b0;
+                        color: #1e1e1e;
+                        padding: 12px 20px;
+                        border-radius: 6px;
+                        font-weight: bold;
+                        z-index: 2000;
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                    `;
+                    notification.textContent = message;
+                    document.body.appendChild(notification);
+                    
+                    setTimeout(() => {
+                        notification.style.opacity = '0';
+                        notification.style.transition = 'opacity 0.5s';
+                        setTimeout(() => notification.remove(), 500);
+                    }, 2000);
+                } catch (error) {
+                    console.error('Failed to show notification:', error);
+                }
+            }
+
+            initialize() {
+                try {
+                    this.loadCode();
+                    this.loadLayout();
+                    this.updateStatus('Finesse editor ready. Press Ctrl+Space!');
+                    this.updateCursorPosition();
+                    
+                    console.log('Cursor-aware editor initialized successfully');
+                } catch (error) {
+                    this.showError('Failed to initialize editor: ' + error.message);
+                }
+            }
+        }
+
+        // Initialize the editor when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            try {
+                const editor = new CursorAwareEditor();
+                editor.initialize();
+            } catch (error) {
+                console.error('Failed to initialize editor:', error);
+                alert('Failed to initialize the code editor. Please check console for details.');
+            }
+        });2
+    </script>
 </body>
 </html>
