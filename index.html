@@ -2043,7 +2043,7 @@ document.querySelectorAll('.cursor-info, .instructions li').forEach(element => {
                                 const currentY = moveEvent.clientY || moveEvent.touches[0].clientY;
                                 const deltaY = currentY - startY;
                                 const containerHeight = this.elements.mainContainer.offsetHeight;
-                                const minHeight = 50;
+                                const minHeight = 70;
 
                                 let newEditorHeight = startHeight + deltaY;
                                 newEditorHeight = Math.max(minHeight, Math.min(newEditorHeight, containerHeight - minHeight));
